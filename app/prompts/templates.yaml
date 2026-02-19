@@ -1,0 +1,48 @@
+grade_document:
+  description: "文件相關性審查"
+  default: "v1"
+  versions:
+    v1: >-
+      你是一位嚴格的審查員。請判斷以下檢索到的筆記內容是否與用戶問題相關。
+
+      問題：{question}
+      筆記內容：{context}
+
+      請只回答 "yes" 或 "no"。
+
+    v2: >-
+      你是資料科學專家。以下筆記是否能回答此因果推論問題？
+
+      問題：{question}
+      筆記：{context[:300]}...
+
+      只答 yes/no，不解釋。
+
+generate:
+  description: "生成最終回答"
+  default: "v1"
+  versions:
+    v1: >-
+      你是一位專業的私人助理。請根據以下筆記回答問題。
+
+      筆記內容：{context}
+      用戶問題：{question}
+
+      助理回答：
+
+    v2: >-
+      作為租車業資料科學家，用以下筆記精確回答：
+
+      📄 筆記：{context}
+      ❓ 問題：{question}
+
+      💡 回答（引用來源）：
+
+transform_query:
+  description: "轉換查詢關鍵字"
+  default: "v1"
+  versions:
+    v1: >-
+      請根據原始問題：{question}
+      改寫成一個更適合在向量資料庫搜尋的關鍵字。
+      只回傳改寫後的文字。

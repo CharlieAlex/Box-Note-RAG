@@ -1,0 +1,104 @@
+[project]
+name = "Box-Note-RAG"
+version = "0.1.0"
+description = "Box Note RAG"
+authors = [{ name = "Heisenberg", email = "charliealex0101@gmail.com" }]
+requires-python = ">=3.9,<3.10"
+
+dependencies = [
+    # --- 核心框架 ---
+    "langchain",
+    "langchain-core",
+    "langchain-community",
+    "langchain-ollama",
+    "langgraph",
+    "urllib3<2.0",         # 避免 SSL 錯誤
+
+    # --- 向量資料庫與 RAG ---
+    "chromadb",           # 輕量級向量資料庫
+    "langchain-chroma",   # LangChain 與 Chroma 的銜接
+    "pypdf",              # 處理 PDF
+    "markdown",
+    "unstructured",       # 處理 Markdown, Docx 等多種格式
+    "tiktoken",           # 計算 Token 數量
+
+    # --- 數據處理與工具 ---
+    "numpy",
+    "pandas",
+    "python-dotenv",      # 管理 API Keys
+    "pydantic",           # 數據模型驗證
+    "pydantic-settings",  # 環境變數管理
+    "tavily-python",      # AI 搜尋工具 (Fallback 用)
+
+    # --- 生產化與觀測 ---
+    "langsmith",          # Debug 與追蹤 (強烈建議安裝)
+    "loguru",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ipykernel",
+    "ruff>=0.12.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]  # src layout
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "C4",
+    "UP",
+    "PL",
+    "NPY",
+    "PD",
+    "TID",
+    "T",
+]
+preview = true
+ignore = [
+    "E226",
+    "E227",
+    "E252",
+    "E402",
+    "B006",
+    "B008",
+    "B905",
+    "C901",
+    "W191",
+    "UP045",
+    "PLR0913",
+    "PLR0917",
+    "PLR0912",
+    "PLR0914",
+    "PLR0915",
+    "PLR2004",
+    "PLR6104",
+    "PD015",
+    "D100",
+    "D400",
+    "D409",
+]
+unfixable = [
+    "D",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.uv.sources]
+heisenberg-utils = { git = "https://github.com/CharlieAlex/heisenberg-utils.git", rev = "v0.1.9" }
