@@ -15,3 +15,12 @@ db-search:
 
 db-sources:
 	uv run python scripts/db_ops.py list-sources
+
+test:
+	uv run pytest
+
+test-unit:
+	uv run pytest -m unit
+
+test-html:
+	uv run pytest --html=docs/reports/test_report.html --self-contained-html

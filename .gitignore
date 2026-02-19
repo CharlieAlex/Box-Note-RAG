@@ -169,6 +169,7 @@ models/
 mlruns/
 sa/
 notebooks/
+docs/
 
 # uv
 *.pyc
