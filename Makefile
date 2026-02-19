@@ -4,6 +4,9 @@ venv:
 ingest:
 	uv run python scripts/ingest.py --data-path $(DATA_PATH)
 
+run:
+	uv run python main.py
+
 db-stats:
 	uv run python scripts/db_ops.py stats
 
