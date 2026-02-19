@@ -45,6 +45,7 @@ dev = [
     "pytest-sugar>=1.0",
     "pytest-cov>=6.0",
     "pytest-mock>=3.14",
+    "pytest-xdist>=3.5",
 ]
 
 [build-system]
