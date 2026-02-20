@@ -47,8 +47,8 @@ def grade_documents(state):
     search_needed = "No"
 
     for d in documents:
-        # 建立一個簡單的評分 Prompt
-        # 叫 Ollama 回傳 'yes' 或 'no'
+        # 建立一個簡單的評分 Prompt，叫 Ollama 回傳 'yes' 或 'no'
+        # 只要有一個文件是不相關的，就繼續搜尋文件
         score = get_llm().invoke(
             PROMPTS_MANAGER
             .get("grade_document", version="v1")
@@ -58,7 +58,6 @@ def grade_documents(state):
             filtered_docs.append(d)
         else:
             search_needed = "Yes"
-            continue
 
     return {"documents": filtered_docs, "question": question, "search_needed": search_needed}
 
