@@ -20,7 +20,10 @@ test:
 	uv run pytest
 
 test-unit:
-	uv run pytest -m unit
+	uv run pytest -m "not integration"
+
+test-integration:
+	uv run pytest -m "integration"
 
 test-html:
 	uv run pytest --html=docs/reports/test_report.html --self-contained-html
