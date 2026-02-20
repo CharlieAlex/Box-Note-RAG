@@ -64,13 +64,18 @@ def grade_documents(state):
 
 def transform_query(state):
     logger.info("--- 優化搜尋關鍵字 ---")
-    question = state["question"]
-    better_question = get_llm().invoke(
+    question = state.get("question", "")
+    retry_count = max(state.get("retry_count") or 0, 0)
+
+    new_question = get_llm().invoke(
         PROMPTS_MANAGER
         .get("transform_query", version="v1")
         .format(question=question)
-    )
-    return {"question": better_question.content, "retry_count": state.get("retry_count", 0) + 1}
+    ).content
+
+    new_retry_count = retry_count + 1
+
+    return {"question": new_question, "retry_count": new_retry_count}
 
 
 def generate(state):
