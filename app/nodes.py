@@ -1,8 +1,8 @@
+from functools import cache, lru_cache
+
 from IPython.display import Image, display
-from langchain_chroma import Chroma
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_ollama import ChatOllama, OllamaEmbeddings
 from loguru import logger
 
 from .config import settings
@@ -12,19 +12,28 @@ EMBEDDINGS_MODEL = settings.embeddings_model
 OLLAMA_MODEL = settings.ollama_model
 CHROMA_PATH = settings.chroma_path
 
-vectorstore = Chroma(
-    persist_directory=CHROMA_PATH,
-    embedding_function=OllamaEmbeddings(model=EMBEDDINGS_MODEL)
-)
-retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
-llm = ChatOllama(model=OLLAMA_MODEL, temperature=0)
+@cache
+def get_retriever():
+    from langchain_chroma import Chroma  # noqa: PLC0415
+    from langchain_ollama import OllamaEmbeddings  # noqa: PLC0415
+    vectorstore = Chroma(
+        persist_directory=settings.chroma_path,
+        embedding_function=OllamaEmbeddings(model=settings.embeddings_model)
+    )
+    return vectorstore.as_retriever(search_kwargs={"k": 10})
+
+
+@lru_cache
+def get_llm():
+    from langchain_ollama import ChatOllama  # noqa: PLC0415
+    return ChatOllama(model=settings.ollama_model, temperature=0)
 
 
 def retrieve(state):
     logger.info("--- 執行檢索 ---")
     question = state["question"]
-    documents = retriever.invoke(question)
+    documents = get_retriever().invoke(question)
     return {"documents": documents, "question": question}
 
 
@@ -40,7 +49,7 @@ def grade_documents(state):
     for d in documents:
         # 建立一個簡單的評分 Prompt
         # 叫 Ollama 回傳 'yes' 或 'no'
-        score = llm.invoke(
+        score = get_llm().invoke(
             PROMPTS_MANAGER
             .get("grade_document", version="v1")
             .format(question=question, context=d.page_content)
@@ -57,7 +66,7 @@ def grade_documents(state):
 def transform_query(state):
     logger.info("--- 優化搜尋關鍵字 ---")
     question = state["question"]
-    better_question = llm.invoke(
+    better_question = get_llm().invoke(
         PROMPTS_MANAGER
         .get("transform_query", version="v1")
         .format(question=question)
@@ -81,7 +90,7 @@ def generate(state):
     )
 
     # 3. 建立簡單的 Chain 並執行
-    rag_chain = prompt | llm | StrOutputParser()
+    rag_chain = prompt | get_llm() | StrOutputParser()
 
     response = rag_chain.invoke({"context": context, "question": question})
 
