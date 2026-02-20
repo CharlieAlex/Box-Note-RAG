@@ -1,6 +1,5 @@
 from functools import cache, lru_cache
 
-from IPython.display import Image, display
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from loguru import logger
@@ -99,7 +98,3 @@ def generate(state):
     response = rag_chain.invoke({"context": context, "question": question})
 
     return {"generation": response}
-
-
-def show_graph(app):
-    display(Image(app.get_graph().draw_mermaid_png()))
