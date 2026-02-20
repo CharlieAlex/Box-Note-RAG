@@ -55,6 +55,27 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["app"]  # src layout
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--html=docs/reports/test_report.html",
+    "--self-contained-html",
+    "--cov=app",
+    "--cov-report=term-missing",
+    "--cov-report=html:docs/reports/coverage_html"
+]
+markers = [
+    "unit: 單元測試 (不需外部服務)",
+    "integration: 整合測試 (需要 Ollama/Chroma)"
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["tests/*"]
+
 [tool.ruff]
 line-length = 120
 indent-width = 4
