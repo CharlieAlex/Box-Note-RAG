@@ -6,6 +6,7 @@ from loguru import logger
 
 from .config import settings
 from .prompts import PROMPTS_MANAGER
+from .schema import YesNoResponse
 
 EMBEDDINGS_MODEL = settings.embeddings_model
 OLLAMA_MODEL = settings.ollama_model
@@ -51,10 +52,12 @@ def grade_documents(state):
     for d in documents:
         # 建立一個簡單的評分 Prompt，叫 Ollama 回傳 'yes' 或 'no'
         # 只要有一個文件是不相關的，就繼續搜尋文件
-        chain = prompt_template | get_llm()
+        chain = prompt_template | get_llm().with_structured_output(YesNoResponse)
         score = chain.invoke({"question": question, "context": d.page_content})
+        logger.debug(f"評分文件:\n {d.page_content}")
+        logger.debug(f"評分結果:\n {score}")
 
-        if "yes" in score.content.lower():
+        if score.answer == "yes":
             filtered_docs.append(d)
         else:
             search_needed = "Yes"
