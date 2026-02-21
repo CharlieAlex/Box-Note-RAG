@@ -24,6 +24,13 @@ def mock_env(monkeypatch):
 
 # ── Prompt 模板 ──────────────────────────────────────
 SAMPLE_TEMPLATES = {
+    "hyde": {
+        "description": "HyDE - 假說文件嵌入",
+        "default": "v1",
+        "versions": {
+            "v1": "根據問題撰寫假說回答。問題：{question}",
+        },
+    },
     "grade_document": {
         "description": "文件相關性審查",
         "default": "v1",
@@ -86,6 +93,14 @@ def mock_llm():
 @pytest.fixture
 def mock_retriever():
     with patch("app.nodes.get_retriever") as mock:
+        retriever_instance = MagicMock()
+        mock.return_value = retriever_instance
+        yield retriever_instance
+
+
+@pytest.fixture
+def mock_bm25_retriever():
+    with patch("app.nodes.get_bm25_retriever") as mock:
         retriever_instance = MagicMock()
         mock.return_value = retriever_instance
         yield retriever_instance

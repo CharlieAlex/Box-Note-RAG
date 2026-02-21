@@ -34,6 +34,89 @@ def test_ask_user_logic(monkeypatch):
     assert result["question"].startswith(initial_question)
 
 
+@pytest.mark.parametrize("question, mock_answer, output", [
+    ("RAG 是什麼？", "這是一段假說回答", "RAG 是什麼？\n\n這是一段假說回答"),  # Happy Path
+    ("", "假說", "\n\n假說"),  # Edge Case: 空問題
+    ("什麼是向量資料庫？", "假設答案", "什麼是向量資料庫？\n\n假設答案"),  # 確保問題原樣保留
+])
+def test_hyde_behavior(mock_llm, question, mock_answer, output):
+    """合併所有 HyDE 測試：驗證 LLM 輸出是否正確與原問題拼接"""
+    mock_llm.return_value = AIMessage(content=mock_answer)
+    result = nodes.hyde({"question": question})
+
+    # 只要驗證組合後的字串格式，就能一次涵蓋原本三個測試的目的
+    assert result["question"] == output
+    assert mock_llm.called
+
+
+@pytest.mark.parametrize("mock_docs, expected_len", [
+    ([Document(page_content="doc1"), Document(page_content="doc2")], 2),  # Happy Path
+    ([], 0),  # Edge Case
+])
+def test_lexical_retrieve_behavior(mock_bm25_retriever, mock_docs, expected_len):
+    """合併所有 BM25 測試：驗證檢索結果正確寫入 lexical_documents"""
+    mock_bm25_retriever.invoke.return_value = mock_docs
+    result = nodes.lexical_retrieve({"question": "test query"})
+
+    assert len(result["lexical_documents"]) == expected_len
+    assert "lexical_documents" in result
+    assert "documents" not in result  # 確保不會覆蓋到 dense 的 key
+    mock_bm25_retriever.invoke.assert_called_once_with("test query")
+
+
+def test_fusion_rrf_ranking_logic():
+    """
+    RRF 核心邏輯測試：重複出現的文件，其 RRF 分數 $1 / (k + \text{rank} + 1)$
+    加總後必定最高，應排在第一位。
+    """
+    shared = Document(page_content="shared_doc")
+    dense = [shared, Document(page_content="dense_only")]
+    lexical = [Document(page_content="lexical_only"), shared]
+
+    result = nodes.fusion({"documents": dense, "lexical_documents": lexical})
+
+    assert result["documents"][0].page_content == "shared_doc"
+
+
+@pytest.mark.parametrize("dense_count, lexical_count, expected_count", [
+    (6, 6, 5),   # Happy Path: 總數超過 5，應截斷取 Top 5
+    (3, 0, 3),   # 單邊為空
+    (0, 0, 0),   # 兩邊皆為空
+    (None, None, 0),  # State 缺少對應 key
+])
+def test_fusion_boundary_conditions(dense_count, lexical_count, expected_count):
+    """合併 RRF 的邊界條件與截斷邏輯測試"""
+    state = {}
+    dense_docs, lexical_docs = None, None
+    if dense_count is not None:
+        dense_docs = [Document(page_content=f"d{i}") for i in range(dense_count)]
+        state["documents"] = dense_docs
+    if lexical_count is not None:
+        lexical_docs = [Document(page_content=f"l{i}") for i in range(lexical_count)]
+        state["lexical_documents"] = lexical_docs
+
+    result = nodes.fusion(state)
+    assert len(result["documents"]) == expected_count
+
+
+@pytest.mark.parametrize("input_count, expected_order", [
+    (5, ["d1", "d3", "d5", "d4", "d2"]),  # Happy Path
+    (3, ["d1", "d3", "d2"]),              # 奇數
+    (2, ["d1", "d2"]),                    # 兩筆
+    (1, ["d1"]),                          # 單筆
+    (0, []),                              # 空陣列
+])
+def test_reorder_behavior(input_count, expected_order):
+    """
+    合併所有重排測試：驗證「迷失在中間」的交替排列演算法。
+    """
+    docs = [Document(page_content=f"d{i+1}") for i in range(input_count)]
+    result = nodes.reorder({"documents": docs})
+
+    contents = [d.page_content for d in result["documents"]]
+    assert contents == expected_order
+
+
 def test_grade_documents_logic(mock_llm):
     """
     測試文件評分邏輯。我們只 Mock LLM 的輸出，

@@ -1,3 +1,15 @@
+hyde:
+  description: "HyDE - 假說文件嵌入"
+  default: "v1"
+  versions:
+    v1: >-
+      你是一位知識豐富的助理。請根據以下問題，撰寫一段可能的回答（約 100-150 字），
+      即使你不確定也請盡量推測。這段文字將用於改善搜尋品質。
+
+      問題：{question}
+
+      請直接回答，不要加任何前綴或解釋。
+
 clarify_question:
   description: "澄清問題含義"
   default: "v1"

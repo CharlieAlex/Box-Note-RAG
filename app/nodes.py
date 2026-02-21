@@ -2,7 +2,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from loguru import logger
 
-from .factory import get_llm, get_retriever
+from .factory import get_bm25_retriever, get_llm, get_retriever
 from .prompts import PROMPTS_MANAGER
 from .schema import YesNoResponse
 
@@ -31,11 +31,37 @@ def ask_user(state) -> dict:
     return {"question": question}
 
 
+def hyde(state):
+    """HyDE: 根據問題生成假說文件，合併後用於檢索"""
+    logger.info("--- HyDE: 生成假說文件 ---")
+    question = state["question"]
+
+    prompt_template = ChatPromptTemplate.from_template(
+        PROMPTS_MANAGER.get("hyde", version="v1")
+    )
+    chain = prompt_template | get_llm()
+    hypothetical_answer = chain.invoke({"question": question}).content
+    merged_query = f"{question}\n\n{hypothetical_answer}"
+
+    logger.debug(f"HyDE 檢索結果:\n{merged_query}")
+
+    return {"question": merged_query}
+
+
 def retrieve(state):
     logger.info("--- 執行檢索 ---")
     question = state["question"]
     documents = get_retriever().invoke(question)
     return {"documents": documents, "question": question}
+
+
+def lexical_retrieve(state):
+    """BM25 lexical retrieval"""
+    logger.info("--- 執行 BM25 詞彙檢索 ---")
+    question = state["question"]
+    documents = get_bm25_retriever(k=10).invoke(question)
+    logger.debug(f"BM25 檢索結果:\n{documents}")
+    return {"lexical_documents": documents}
 
 
 def grade_documents(state):
@@ -79,6 +105,58 @@ def transform_query(state):
     new_retry_count = retry_count + 1
 
     return {"question": new_question, "retry_count": new_retry_count}
+
+
+def fusion(state):
+    """RRF (Reciprocal Rank Fusion) 融合 dense 和 lexical 檢索結果"""
+    logger.info("--- RRF 融合排名 ---")
+    dense_docs = state.get("documents") or []
+    lexical_docs = state.get("lexical_documents") or []
+
+    # RRF 排名常數
+    k = 60
+
+    # 計算每個文件的 RRF 分數
+    scores: dict[str, float] = {}
+    doc_map: dict[str, object] = {}
+
+    for rank, doc in enumerate(dense_docs):
+        key = doc.page_content
+        scores[key] = scores.get(key, 0) + 1 / (k + rank + 1)
+        doc_map[key] = doc
+
+    for rank, doc in enumerate(lexical_docs):
+        key = doc.page_content
+        scores[key] = scores.get(key, 0) + 1 / (k + rank + 1)
+        doc_map[key] = doc
+
+    # 按 RRF 分數排序，取前 5
+    sorted_keys = sorted(scores, key=lambda x: scores[x], reverse=True)[:5]
+    fused_docs = [doc_map[key] for key in sorted_keys]
+
+    return {"documents": fused_docs}
+
+
+def reorder(state):
+    """將文件交替排列：第1名在位置1, 第2名在最後, 第3名在位置2, 第4名在倒數第2..."""
+    logger.info("--- 重新排序文件 ---")
+    documents = state.get("documents") or []
+
+    if len(documents) <= 1:
+        return {"documents": documents}
+
+    reordered = [None] * len(documents)
+    left, right = 0, len(documents) - 1
+
+    for i, doc in enumerate(documents):
+        if i % 2 == 0:
+            reordered[left] = doc
+            left += 1
+        else:
+            reordered[right] = doc
+            right -= 1
+
+    return {"documents": reordered}
 
 
 def generate(state):
