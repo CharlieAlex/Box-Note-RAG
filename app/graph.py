@@ -1,4 +1,3 @@
-from IPython.display import Image, display
 from langgraph.graph import END, StateGraph
 
 from .nodes import generate, grade_documents, retrieve, transform_query
@@ -44,7 +43,3 @@ def create_app():
     workflow.add_edge("generate", END)
 
     return workflow.compile()
-
-
-def show_graph(app):
-    display(Image(app.get_graph().draw_mermaid_png()))
