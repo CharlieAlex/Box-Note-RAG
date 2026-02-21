@@ -16,17 +16,20 @@ db-search:
 db-sources:
 	uv run python scripts/db_ops.py list-sources
 
+ruff-check:
+	uv run ruff check
+
 test:
-	uv run pytest
+	make ruff-check && uv run pytest
 
 test-unit:
-	uv run pytest -m "not integration"
+	make ruff-check && uv run pytest -m "not integration"
 
 test-integration:
-	uv run pytest -m "integration"
+	make ruff-check && uv run pytest -m "integration"
 
 test-html:
-	uv run pytest --html=docs/reports/test_report.html --self-contained-html
+	make ruff-check && uv run pytest --html=docs/reports/test_report.html --self-contained-html
 
 show-graph:
 	uv run python scripts/show_graph.py
