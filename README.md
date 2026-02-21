@@ -22,20 +22,32 @@ Box-Note 是一個個人筆記檔案庫，本專案透過 **RAG（Retrieval-Augm
 本專案基於 **LangGraph** 建構一個有狀態的 RAG Pipeline，涵蓋問題釐清、HyDE、混合檢索、RRF 融合、文件重排序等進階技術：
 
 ```mermaid
-graph TD
-    A[👤 使用者提問] --> B[Clarify Question<br/>釐清問題含義]
-    B --> C[Ask User<br/>互動引導]
-    C --> D[HyDE<br/>生成假說文件]
-    D --> E[Retrieve<br/>向量語意檢索]
-    D --> F[Lexical Retrieve<br/>BM25 詞彙檢索]
-    E --> G[Grade Documents<br/>文件相關性評估]
-    G -->|相關性足夠| H[Fusion<br/>RRF 融合排名]
-    G -->|相關性不足| I[Transform Query<br/>改寫問題]
-    I --> E
-    F --> H
-    H --> J[Reorder<br/>文件重排序]
-    J --> K[Generate<br/>生成回答]
-    K --> L[📄 輸出回答]
+%%{ init: { "flowchart": { "curve": "step" } } }%%
+graph LR
+    subgraph P1 [前處理階段]
+        direction TB
+        A[👤 使用者提問] --> B[Clarify Question<br/>釐清問題含義]
+        B --> C[Ask User<br/>互動引導]
+        C --> D[HyDE<br/>生成假說文件]
+    end
+    subgraph P2 [語意檢索]
+        E[Retrieve<br/>向量語意檢索] --> G[Grade Documents<br/>文件相關性評估]
+        G -->|相關性不足| I[Transform Query<br/>改寫問題]
+        I --> E
+    end
+    subgraph P3 [詞彙檢索]
+        F[Lexical Retrieve<br/>BM25 詞彙檢索]
+    end
+    subgraph P4 [混合後生成]
+        direction TB
+        H[Fusion<br/>RRF 融合排名] --> J[Reorder<br/>文件重排序]
+        J --> K[Generate<br/>生成回答]
+        K --> L[📄 輸出回答]
+    end
+
+    P1 --> P2 & P3
+    F --> P4
+    G -->|相關性足夠| P4
 ```
 
 | 節點 | 說明 |
