@@ -4,16 +4,23 @@ from .nodes import generate, grade_documents, retrieve, transform_query
 from .state import GraphState
 
 
-def create_app():
-    def decide_to_generate(state):
-        retry_count = state.get("retry_count", 0)
-        search_needed = state.get("search_needed")
-        max_retry_count = state.get("max_retry_count", 3)
+def decide_to_generate(state):
+    retry_count = state.get("retry_count", 0)
+    search_needed = state.get("search_needed")
+    max_retry_count = state.get("max_retry_count", 3)
 
-        # 如果 retry 超過限定次數，或者文件足夠，就生成
-        if retry_count >= max_retry_count or search_needed != "Yes":
-            return "generate"  # 跳 generate 節點
-        return "transform_query"  # 跳 transform_query 節點
+    # 如果 retry 超過限定次數，就生成
+    if retry_count >= max_retry_count:
+        return "generate"
+
+    # 如果文件足夠，也生成
+    if search_needed != "Yes":
+        return "generate"
+
+    return "transform_query"
+
+
+def create_app():
 
     workflow = StateGraph(GraphState)
 
