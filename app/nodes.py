@@ -44,15 +44,16 @@ def grade_documents(state):
     # 這裡用 Ollama 做一個簡單的判斷
     filtered_docs = []
     search_needed = "No"
+    prompt_template = ChatPromptTemplate.from_template(
+        PROMPTS_MANAGER.get("grade_document", version="v1")
+    )
 
     for d in documents:
         # 建立一個簡單的評分 Prompt，叫 Ollama 回傳 'yes' 或 'no'
         # 只要有一個文件是不相關的，就繼續搜尋文件
-        score = get_llm().invoke(
-            PROMPTS_MANAGER
-            .get("grade_document", version="v1")
-            .format(question=question, context=d.page_content)
-        )
+        chain = prompt_template | get_llm()
+        score = chain.invoke({"question": question, "context": d.page_content})
+
         if "yes" in score.content.lower():
             filtered_docs.append(d)
         else:
@@ -66,11 +67,11 @@ def transform_query(state):
     question = state.get("question", "")
     retry_count = max(state.get("retry_count") or 0, 0)
 
-    new_question = get_llm().invoke(
-        PROMPTS_MANAGER
-        .get("transform_query", version="v1")
-        .format(question=question)
-    ).content
+    prompt_template = ChatPromptTemplate.from_template(
+        PROMPTS_MANAGER.get("transform_query", version="v1")
+    )
+    chain = prompt_template | get_llm()
+    new_question = chain.invoke({'question': question}).content
 
     new_retry_count = retry_count + 1
 
@@ -89,7 +90,6 @@ def generate(state):
     prompt = ChatPromptTemplate.from_template(
         PROMPTS_MANAGER
         .get("generate", version="v1")
-        .format(context=context, question=question)
     )
 
     # 3. 建立簡單的 Chain 並執行
