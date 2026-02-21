@@ -1,33 +1,10 @@
-from functools import cache, lru_cache
-
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from loguru import logger
 
-from .config import settings
+from .factory import get_llm, get_retriever
 from .prompts import PROMPTS_MANAGER
 from .schema import YesNoResponse
-
-EMBEDDINGS_MODEL = settings.embeddings_model
-OLLAMA_MODEL = settings.ollama_model
-CHROMA_PATH = settings.chroma_path
-
-
-@cache
-def get_retriever():
-    from langchain_chroma import Chroma  # noqa: PLC0415
-    from langchain_ollama import OllamaEmbeddings  # noqa: PLC0415
-    vectorstore = Chroma(
-        persist_directory=settings.chroma_path,
-        embedding_function=OllamaEmbeddings(model=settings.embeddings_model)
-    )
-    return vectorstore.as_retriever(search_kwargs={"k": 10})
-
-
-@lru_cache
-def get_llm():
-    from langchain_ollama import ChatOllama  # noqa: PLC0415
-    return ChatOllama(model=settings.ollama_model, temperature=0)
 
 
 def retrieve(state):
