@@ -64,24 +64,10 @@ def run_agent():
     app = create_app()
     config = {"configurable": {"thread_id": "user_1"}}
 
+    # 輸入輸出
     user_q = input("請輸入關於筆記的問題：")
-    inputs = {"question": user_q, "retry_count": 0}
-
-    logger.info("🚀 開始 Streaming...")
-
-    # Streaming 執行
-    final_output = {}
-    for event in app.stream(inputs, config, stream_mode="values"):
-        current_state = event
-
-        if "generation" in current_state[list(current_state.keys())[0]]:
-            logger.info(
-                f"\n✨ 生成中: {current_state[list(current_state.keys())[0]]['generation']}",
-                end="",
-                flush=True
-            )
-
-        final_output = current_state  # 最後狀態
+    inputs = {"question": user_q, "retry_count": 0, "max_retry_count": 1}
+    final_output = app.invoke(inputs)
 
     # 結構化顯示最終結果
     show_structured_output({
