@@ -5,6 +5,33 @@ from langchain_core.documents import Document
 from langchain_core.messages import AIMessage
 
 from app import nodes
+from app.schema import YesNoResponse
+
+
+def test_clarify_question(mock_llm):
+    mock_llm.return_value = AIMessage(content="better question")
+    state = {"question": "test"}
+    result = nodes.clarify_question(state)
+    assert result["question"] == "better question"
+    assert mock_llm.called
+
+
+def test_ask_user_logic(monkeypatch):
+    # 1. 準備模擬的 State
+    initial_question = "你想學習 pytest 嗎？\n1. 是\n2. 否"
+    state = {"question": initial_question}
+
+    # 2. Mock 掉內建的 input 函式
+    # 這裡我們模擬用戶輸入了 "1"
+    monkeypatch.setattr("builtins.input", lambda _: "1")
+
+    # 3. 執行節點
+    result = nodes.ask_user(state)
+
+    # 4. 斷言 (Assertion)
+    assert "1" in result["question"]
+    assert "請提供你的想法" in result["question"]
+    assert result["question"].startswith(initial_question)
 
 
 def test_grade_documents_logic(mock_llm):

@@ -7,6 +7,30 @@ from .prompts import PROMPTS_MANAGER
 from .schema import YesNoResponse
 
 
+def clarify_question(state):
+    logger.info("--- 釐清問題含義 ---")
+    question = state["question"]
+    prompt_template = ChatPromptTemplate.from_template(
+        PROMPTS_MANAGER.get("clarify_question", version="v1")
+    )
+    chain = prompt_template | get_llm()
+    new_question = chain.invoke({'question': question}).content
+
+    return {"question": new_question}
+
+
+def ask_user(state) -> dict:
+    logger.info("--- 提供用戶選擇選項 ---")
+    question = state["question"]
+    logger.info(f"\n{question}")
+
+    guided_question = "請提供你的想法(如輸入選項數字，或是更清楚的問題):"
+    user_choice = input(guided_question)
+    question += f"\n\n{guided_question}\n\n{user_choice}"
+
+    return {"question": question}
+
+
 def retrieve(state):
     logger.info("--- 執行檢索 ---")
     question = state["question"]
@@ -31,8 +55,7 @@ def grade_documents(state):
         # 只要有一個文件是不相關的，就繼續搜尋文件
         chain = prompt_template | get_llm().with_structured_output(YesNoResponse)
         score = chain.invoke({"question": question, "context": d.page_content})
-        logger.debug(f"評分文件:\n {d.page_content}")
-        logger.debug(f"評分結果:\n {score}")
+        logger.debug(f"評分結果: {score.answer}\n {d.page_content}")
 
         if score.answer == "yes":
             filtered_docs.append(d)
