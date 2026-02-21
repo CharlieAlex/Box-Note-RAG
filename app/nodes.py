@@ -71,7 +71,7 @@ def transform_query(state):
     retry_count = max(state.get("retry_count") or 0, 0)
 
     prompt_template = ChatPromptTemplate.from_template(
-        PROMPTS_MANAGER.get("transform_query", version="v1")
+        PROMPTS_MANAGER.get("transform_query", version="v2")
     )
     chain = prompt_template | get_llm()
     new_question = chain.invoke({'question': question}).content
