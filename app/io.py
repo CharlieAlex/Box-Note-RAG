@@ -11,17 +11,23 @@ DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 
 
-def save_conversation(thread_id: str, inputs: dict, final_output: dict):
-    """儲存單次對話（JSONL，每行一筆）"""
+def doc_to_dict(doc: Any) -> dict:
+    """Document → JSON dict"""
+    if isinstance(doc, Document):
+        return {
+            "page_content": doc.page_content,
+            "metadata": doc.metadata
+        }
+    return doc  # 其他類型
 
-    def doc_to_dict(doc: Any) -> dict:
-        """Document → JSON dict"""
-        if isinstance(doc, Document):
-            return {
-                "page_content": doc.page_content,
-                "metadata": doc.metadata
-            }
-        return doc  # 其他類型
+
+def save_conversation(
+    thread_id: str,
+    inputs: dict,
+    final_output: dict,
+    save_path: str = DATA_DIR / "conversations.jsonl"
+    ) -> None:
+    """儲存單次對話（JSONL，每行一筆）"""
 
     timestamp = datetime.now().isoformat()
     record = {
@@ -34,7 +40,7 @@ def save_conversation(thread_id: str, inputs: dict, final_output: dict):
     }
 
     # JSONL：每行一筆對話（易 append）
-    (DATA_DIR / "conversations.jsonl").open("a", encoding="utf-8").write(
+    save_path.open("a", encoding="utf-8").write(
         json.dumps(record, ensure_ascii=False) + "\n"
     )
 
