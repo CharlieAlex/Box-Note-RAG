@@ -1,9 +1,10 @@
 from app.graph import create_app
-from app.io import save_conversation, show_structured_output
+from app.io import save_conversation, show_graph, show_structured_output
 
 
 def run_agent():
     app = create_app()
+    show_graph(app)
     config = {"configurable": {"thread_id": "user_1"}}
 
     # 輸入輸出
