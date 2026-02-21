@@ -3,12 +3,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from IPython.display import Image, display
 from langchain_core.documents import Document
 from loguru import logger
 
 DATA_DIR = Path("data")
+DOCS_DIR = Path("docs")
 DATA_DIR.mkdir(exist_ok=True)
+DOCS_DIR.mkdir(exist_ok=True)
 
 
 def doc_to_dict(doc: Any) -> dict:
@@ -65,5 +66,24 @@ def show_structured_output(output):
     logger.info(structured_output)
 
 
-def show_graph(app):
-    display(Image(app.get_graph().draw_mermaid_png()))
+def show_graph(app, png_path: str = DATA_DIR / "graph.png", md_path: str = DOCS_DIR / "graph.md") -> None:
+    """產生並儲存 LangGraph 的 Mermaid PNG 圖以及文件"""
+    # 產生 PNG bytes
+    png_bytes = app.get_graph().draw_mermaid_png()
+    mermaid_code = app.get_graph().draw_mermaid()
+
+    # 確保目錄存在
+    png_path.parent.mkdir(parents=True, exist_ok=True)
+    md_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # 儲存 Markdown（含 Mermaid 原始碼 + 圖片嵌入）
+    title = "# LangGraph 流程圖"
+    header = "## Mermaid 原始碼"
+    mermaid_block = f"```mermaid\n{mermaid_code}\n```"
+    md_content = f"{title}\n\n{header}\n\n{mermaid_block}"
+
+    png_path.open("wb").write(png_bytes)
+    logger.success(f"💾 已存到 {png_path}")
+
+    md_path.open("w", encoding="utf-8").write(md_content)
+    logger.success(f"💾 已存到 {md_path}")

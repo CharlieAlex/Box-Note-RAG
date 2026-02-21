@@ -27,3 +27,6 @@ test-integration:
 
 test-html:
 	uv run pytest --html=docs/reports/test_report.html --self-contained-html
+
+show-graph:
+	uv run python scripts/show_graph.py
