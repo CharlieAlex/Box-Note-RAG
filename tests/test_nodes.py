@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage
@@ -11,8 +13,10 @@ def test_grade_documents_logic(mock_llm):
     其餘的 Loop 和 Filter 邏輯維持真實運作。
     """
     # 模擬 LLM 對三份文件的評價：是、否、是
-    yes, no = AIMessage(content="yes"), AIMessage(content="no")
-    mock_llm.side_effect = [yes, no, yes]
+    yes, no = YesNoResponse(answer="yes"), YesNoResponse(answer="no")
+    structured_runnable = MagicMock()
+    structured_runnable.side_effect = [yes, no, yes]
+    mock_llm.with_structured_output.return_value = structured_runnable
 
     docs = [Document(page_content=f"c{i}") for i in range(3)]
     state = {"question": "test", "documents": docs}
