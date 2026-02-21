@@ -33,6 +33,7 @@ dependencies = [
     # --- 生產化與觀測 ---
     "langsmith",          # Debug 與追蹤 (強烈建議安裝)
     "loguru",
+    "rank-bm25>=0.2.2",
 ]
 
 [project.optional-dependencies]
