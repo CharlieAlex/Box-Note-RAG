@@ -129,7 +129,7 @@ def test_grade_documents_logic(mock_llm):
     mock_llm.with_structured_output.return_value = structured_runnable
 
     docs = [Document(page_content=f"c{i}") for i in range(3)]
-    state = {"question": "test", "documents": docs}
+    state = {"vector_question": "test", "documents": docs}
 
     result = nodes.grade_documents(state)
 
@@ -149,11 +149,11 @@ def test_transform_query_state_update(mock_llm, question, retry_count, expected_
     """
     mock_llm.return_value = AIMessage(content="better question")
 
-    state = {"question": question, "retry_count": retry_count}
+    state = {"vector_question": question, "retry_count": retry_count}
     result = nodes.transform_query(state)
 
     assert result["retry_count"] == expected_retry
-    assert result["question"] == "better question"
+    assert result["vector_question"] == "better question"
     assert mock_llm.called
 
 

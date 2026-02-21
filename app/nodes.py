@@ -50,9 +50,11 @@ def hyde(state):
 
 def retrieve(state):
     logger.info("--- 執行檢索 ---")
-    question = state["question"]
-    documents = get_retriever().invoke(question)
-    return {"documents": documents, "question": question}
+    if "vector_question" not in state:
+        state["vector_question"] = state["question"]
+    vector_question = state["vector_question"]
+    documents = get_retriever().invoke(vector_question)
+    return {"documents": documents, "vector_question": vector_question}
 
 
 def lexical_retrieve(state):
@@ -66,7 +68,7 @@ def lexical_retrieve(state):
 
 def grade_documents(state):
     logger.info("--- 檢查文件相關性 ---")
-    question = state["question"]
+    question = state["vector_question"]
     documents = state["documents"]
 
     # 這裡用 Ollama 做一個簡單的判斷
@@ -88,12 +90,12 @@ def grade_documents(state):
         else:
             search_needed = "Yes"
 
-    return {"documents": filtered_docs, "question": question, "search_needed": search_needed}
+    return {"documents": filtered_docs, "vector_question": question, "search_needed": search_needed}
 
 
 def transform_query(state):
     logger.info("--- 優化搜尋關鍵字 ---")
-    question = state.get("question", "")
+    question = state.get("vector_question", "")
     retry_count = max(state.get("retry_count") or 0, 0)
 
     prompt_template = ChatPromptTemplate.from_template(
@@ -104,7 +106,7 @@ def transform_query(state):
 
     new_retry_count = retry_count + 1
 
-    return {"question": new_question, "retry_count": new_retry_count}
+    return {"vector_question": new_question, "retry_count": new_retry_count}
 
 
 def fusion(state):

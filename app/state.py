@@ -8,6 +8,7 @@ def _last(_, new):
 
 class GraphState(TypedDict):
     question: Annotated[str, _last]          # 用戶原始問題
+    vector_question: Annotated[str, _last]      # 向量檢索時轉換的問題
     documents: Annotated[list, _last]        # 向量檢索到的筆記片段
     lexical_documents: Annotated[list, _last]  # 詞法檢索到的筆記片段
     generation: str        # AI 生成的最終答案
