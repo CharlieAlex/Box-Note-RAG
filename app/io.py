@@ -66,7 +66,7 @@ def show_structured_output(output):
     logger.info(structured_output)
 
 
-def show_graph(app, png_path: str = DATA_DIR / "graph.png", md_path: str = DOCS_DIR / "graph.md") -> None:
+def save_graph(app, png_path: str = DATA_DIR / "graph.png", md_path: str = DOCS_DIR / "graph.md") -> None:
     """產生並儲存 LangGraph 的 Mermaid PNG 圖以及文件"""
     # 產生 PNG bytes
     png_bytes = app.get_graph().draw_mermaid_png()

@@ -1,7 +1,7 @@
 import mlflow
 
 from app.graph import create_app
-from app.io import save_conversation, show_graph, show_structured_output
+from app.io import save_conversation, save_graph, show_structured_output
 from app.telemetry import init_monitoring
 
 init_monitoring()
@@ -10,7 +10,6 @@ app = create_app()
 
 def run_agent():
     with mlflow.start_run():
-        show_graph(app)
         config = {"configurable": {"thread_id": "user_1"}}
 
         # 輸入輸出
@@ -26,6 +25,7 @@ def run_agent():
         })
 
         # 自動儲存
+        save_graph(app)
         save_conversation(config["configurable"]["thread_id"], inputs, final_output)
 
 
