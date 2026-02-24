@@ -11,12 +11,11 @@ app = create_app()
 
 def run_agent():
     with mlflow.start_run():
-        config = {"configurable": {"thread_id": "user_1"}}
-
         # 輸入輸出
         user_q = input("請輸入關於筆記的問題：")
         inputs = {"question": user_q, "max_retry_count": settings.max_retry_count}
-        final_output = app.invoke(inputs)
+        config = {"configurable": {"thread_id": "user_1"}}
+        final_output = app.invoke(inputs, config)
 
         # 結構化顯示最終結果
         show_structured_output({
