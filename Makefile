@@ -33,3 +33,8 @@ test-html:
 
 show-graph:
 	uv run python scripts/show_graph.py
+
+mlflow:
+	uv run mlflow ui \
+		--backend-store-uri sqlite:///data/mlflow.db \
+		--port 5000

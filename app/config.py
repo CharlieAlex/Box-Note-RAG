@@ -4,6 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    mlflow_tracking_uri: str = "sqlite:///data/mlflow.db"
+    mlflow_experiment_name: str = "My_Notes_RAG_Agent"
+    enable_telemetry: bool = True
     ollama_model: str
     embeddings_model: str
     chroma_path: str
