@@ -21,6 +21,7 @@ dependencies = [
     "markdown",
     "unstructured",       # 處理 Markdown, Docx 等多種格式
     "tiktoken",           # 計算 Token 數量
+    "rank-bm25>=0.2.2",
 
     # --- 數據處理與工具 ---
     "numpy",
@@ -31,9 +32,8 @@ dependencies = [
     "tavily-python",      # AI 搜尋工具 (Fallback 用)
 
     # --- 生產化與觀測 ---
-    "langsmith",          # Debug 與追蹤 (強烈建議安裝)
+    "mlflow",
     "loguru",
-    "rank-bm25>=0.2.2",
 ]
 
 [project.optional-dependencies]
