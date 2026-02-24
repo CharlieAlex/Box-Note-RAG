@@ -5,4 +5,5 @@ ollama_model: "llama3.2"
 embeddings_model: "qwen3-embedding:0.6b"
 chroma_path: "data/chroma_db"
 batch_size: 50
+max_retry_count: 1
 debug: False

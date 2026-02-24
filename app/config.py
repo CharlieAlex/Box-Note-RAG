@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     embeddings_model: str
     chroma_path: str
     batch_size: int
+    max_retry_count: int
     openai_api_key: Optional[str] = None
     debug: bool = False
 
