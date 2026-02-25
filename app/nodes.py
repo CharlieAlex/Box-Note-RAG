@@ -1,3 +1,4 @@
+import mlflow
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from loguru import logger
@@ -7,6 +8,7 @@ from .prompts import PROMPTS_MANAGER
 from .schema import YesNoResponse
 
 
+@mlflow.trace(name="clarify_question")
 def clarify_question(state):
     logger.info("--- 釐清問題含義 ---")
     question = state["question"]
@@ -19,6 +21,7 @@ def clarify_question(state):
     return {"question": new_question}
 
 
+@mlflow.trace(name="ask_user")
 def ask_user(state) -> dict:
     logger.info("--- 提供用戶選擇選項 ---")
     question = state["question"]
@@ -31,6 +34,7 @@ def ask_user(state) -> dict:
     return {"question": question}
 
 
+@mlflow.trace(name="hyde")
 def hyde(state):
     """HyDE: 根據問題生成假說文件，合併後用於檢索"""
     logger.info("--- HyDE: 生成假說文件 ---")
@@ -48,6 +52,7 @@ def hyde(state):
     return {"question": merged_query}
 
 
+@mlflow.trace(name="retrieve")
 def retrieve(state):
     logger.info("--- 執行檢索 ---")
     if "vector_question" not in state:
@@ -57,6 +62,7 @@ def retrieve(state):
     return {"documents": documents, "vector_question": vector_question}
 
 
+@mlflow.trace(name="lexical_retrieve")
 def lexical_retrieve(state):
     """BM25 lexical retrieval"""
     logger.info("--- 執行 BM25 詞彙檢索 ---")
@@ -66,6 +72,7 @@ def lexical_retrieve(state):
     return {"lexical_documents": documents}
 
 
+@mlflow.trace(name="grade_documents")
 def grade_documents(state):
     logger.info("--- 檢查文件相關性 ---")
     question = state["vector_question"]
@@ -93,6 +100,7 @@ def grade_documents(state):
     return {"documents": filtered_docs, "vector_question": question, "search_needed": search_needed}
 
 
+@mlflow.trace(name="transform_query")
 def transform_query(state):
     logger.info("--- 優化搜尋關鍵字 ---")
     question = state.get("vector_question", "")
@@ -109,6 +117,7 @@ def transform_query(state):
     return {"vector_question": new_question, "retry_count": new_retry_count}
 
 
+@mlflow.trace(name="fusion")
 def fusion(state):
     """RRF (Reciprocal Rank Fusion) 融合 dense 和 lexical 檢索結果"""
     logger.info("--- RRF 融合排名 ---")
@@ -139,6 +148,7 @@ def fusion(state):
     return {"documents": fused_docs}
 
 
+@mlflow.trace(name="reorder")
 def reorder(state):
     """將文件交替排列：第1名在位置1, 第2名在最後, 第3名在位置2, 第4名在倒數第2..."""
     logger.info("--- 重新排序文件 ---")
@@ -161,6 +171,7 @@ def reorder(state):
     return {"documents": reordered}
 
 
+@mlflow.trace(name="generate")
 def generate(state):
     logger.info("--- 執行最終生成 ---")
     question = state["question"]
