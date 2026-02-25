@@ -2,12 +2,12 @@ import typer
 from loguru import logger
 from tqdm import tqdm
 
-from app.config import settings
+from app.config import get_settings
 from app.retriever.loaders import load_documents
 from app.retriever.splitters import get_recursive_splitter
 from app.retriever.vector_store import get_vector_store
 
-BATCH_SIZE = settings.batch_size
+BATCH_SIZE = get_settings().batch_size
 app = typer.Typer()
 
 

@@ -1,7 +1,6 @@
-from pathlib import Path
+from functools import lru_cache
 from typing import Optional
 
-import yaml
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,16 +16,13 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = None
     debug: bool = False
 
-    model_config = SettingsConfigDict(env_file=".env")
-
-    @classmethod
-    def load_custom_config(cls):
-        config_path = Path("config.yml")
-        yaml_data = {}
-        if config_path.exists():
-            with open(config_path, encoding="utf-8") as f:
-                yaml_data = yaml.safe_load(f) or {}
-        return cls(**yaml_data)
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 
-settings = Settings.load_custom_config()
+@lru_cache
+def get_settings():
+    return Settings()

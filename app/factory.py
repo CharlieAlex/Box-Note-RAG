@@ -5,11 +5,11 @@ from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 
-from .config import settings
+from .config import get_settings
 
-EMBEDDINGS_MODEL = settings.embeddings_model
-OLLAMA_MODEL = settings.ollama_model
-CHROMA_PATH = settings.chroma_path
+EMBEDDINGS_MODEL = get_settings().embeddings_model
+OLLAMA_MODEL = get_settings().ollama_model
+CHROMA_PATH = get_settings().chroma_path
 
 
 @cache

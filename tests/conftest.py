@@ -4,22 +4,25 @@ import pytest
 import yaml
 from langchain_core.documents import Document
 
+from app.config import get_settings
 from app.prompts.manager import PromptManager
 
 
 # ── 環境變數 ─────────────────────────────────────────
-@pytest.fixture()
+@pytest.fixture(autouse=True)
+def clear_cache():
+    """每次測試前後清除快取"""
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
+
+@pytest.fixture
 def mock_env(monkeypatch):
-    """設定必要環境變數，讓 Settings() 可正常初始化"""
-    env_vars = {
-        "OLLAMA_MODEL": "test-model",
-        "EMBEDDINGS_MODEL": "test-embeddings",
-        "CHROMA_PATH": "/tmp/test_chroma",
-        "BATCH_SIZE": "10",
-    }
-    for key, val in env_vars.items():
-        monkeypatch.setenv(key, val)
-    return env_vars
+    def _set_env(env_vars: dict):
+        for k, v in env_vars.items():
+            monkeypatch.setenv(k, v)
+    return _set_env
 
 
 # ── Prompt 模板 ──────────────────────────────────────

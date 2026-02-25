@@ -1,6 +1,6 @@
 import mlflow
 
-from app.config import settings
+from app.config import get_settings
 from app.graph import create_app
 from app.io import save_conversation, save_graph, show_structured_output
 from app.telemetry import init_monitoring
@@ -13,7 +13,7 @@ def run_agent():
     with mlflow.start_run():
         # 輸入輸出
         user_q = input("請輸入關於筆記的問題：")
-        inputs = {"question": user_q, "max_retry_count": settings.max_retry_count}
+        inputs = {"question": user_q, "max_retry_count": get_settings().max_retry_count}
         config = {"configurable": {"thread_id": "user_1"}}
         final_output = app.invoke(inputs, config)
 

@@ -5,10 +5,10 @@ from loguru import logger
 from rich.console import Console
 from rich.table import Table
 
-from app.config import settings
+from app.config import get_settings
 from app.retriever.vector_store import get_vector_store
 
-CHROMA_PATH = settings.chroma_path
+CHROMA_PATH = get_settings().chroma_path
 
 app = typer.Typer()
 console = Console()
