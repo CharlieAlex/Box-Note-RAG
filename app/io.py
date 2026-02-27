@@ -4,11 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from langchain_core.documents import Document
-from loguru import logger
 from rich.panel import Panel
 from rich.table import Table
 
-from .telemetry import console
+from .telemetry import RichUI, console
 
 DATA_DIR = Path("data")
 DOCS_DIR = Path("docs")
@@ -48,7 +47,7 @@ def save_conversation(
         json.dumps(record, ensure_ascii=False) + "\n"
     )
 
-    logger.success(f"💾 已存到 data/conversations.jsonl (thread: {thread_id})")
+    RichUI.display_success(f"💾 已存到 data/conversations.jsonl (thread: {thread_id})")
 
 
 def show_structured_output(output):
@@ -100,7 +99,7 @@ def save_graph(app, png_path: str = DATA_DIR / "graph.png", md_path: str = DOCS_
     md_content = f"{title}\n\n{header}\n\n{mermaid_block}"
 
     png_path.open("wb").write(png_bytes)
-    logger.success(f"💾 已存到 {png_path}")
+    RichUI.display_success(f"💾 已存到 {png_path}")
 
     md_path.open("w", encoding="utf-8").write(md_content)
-    logger.success(f"💾 已存到 {md_path}")
+    RichUI.display_success(f"💾 已存到 {md_path}")
