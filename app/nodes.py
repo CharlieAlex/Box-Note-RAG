@@ -109,8 +109,9 @@ def grade_documents(state):
 
         if score.answer == "yes":
             filtered_docs.append(d)
-        else:
-            search_needed = "Yes"
+
+    if len(filtered_docs) < 10:
+        search_needed = "Yes"
 
     return {"documents": filtered_docs, "vector_question": question, "search_needed": search_needed}
 
