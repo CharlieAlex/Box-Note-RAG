@@ -9,6 +9,7 @@ from .nodes import (
     grade_documents,
     hyde,
     lexical_retrieve,
+    refine_question,
     reorder,
     retrieve,
     transform_query,
@@ -47,6 +48,7 @@ def create_app():
     workflow.add_node("check_clarity", check_clarity)
     workflow.add_node("clarify_question", clarify_question)
     workflow.add_node("ask_user", ask_user)
+    workflow.add_node("refine_question", refine_question)
     workflow.add_node("hyde", hyde)
     workflow.add_node("retrieve", retrieve)
     workflow.add_node("lexical_retrieve", lexical_retrieve)
@@ -61,7 +63,8 @@ def create_app():
 
     # 3. 建立連線
     workflow.add_edge("clarify_question", "ask_user")
-    workflow.add_edge("ask_user", "hyde")
+    workflow.add_edge("ask_user", "refine_question")
+    workflow.add_edge("refine_question", "hyde")
     workflow.add_edge("hyde", "retrieve")
     workflow.add_edge("hyde", "lexical_retrieve")
     workflow.add_edge("retrieve", "grade_documents")

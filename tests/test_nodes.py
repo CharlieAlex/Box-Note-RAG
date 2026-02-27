@@ -52,6 +52,15 @@ def test_ask_user_logic(monkeypatch):
     assert result["question"].startswith(initial_question)
 
 
+def test_refine_question(mock_llm):
+    """測試問題總結節點"""
+    mock_llm.return_value = AIMessage(content="summarized question")
+    state = {"question": "context and user choice"}
+    result = nodes.refine_question(state)
+    assert result["question"] == "summarized question"
+    assert mock_llm.called
+
+
 @pytest.mark.parametrize("question, mock_answer, output", [
     ("RAG 是什麼？", "這是一段假說回答", "RAG 是什麼？\n\n這是一段假說回答"),  # Happy Path
     ("", "假說", "\n\n假說"),  # Edge Case: 空問題

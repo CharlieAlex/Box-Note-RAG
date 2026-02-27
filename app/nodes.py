@@ -49,6 +49,20 @@ def ask_user(state) -> dict:
     return {"question": question}
 
 
+@track_node("總結問題")
+@mlflow.trace(name="refine_question")
+def refine_question(state):
+    """將用戶澄清後的對話歷史總結為一個精確的搜尋問題"""
+    question = state["question"]
+    prompt_template = ChatPromptTemplate.from_template(
+        PROMPTS_MANAGER.get("refine_question", version="v1")
+    )
+    chain = prompt_template | get_llm()
+    refined_question = chain.invoke({"question": question}).content
+
+    return {"question": refined_question}
+
+
 @track_node("HyDE 生成")
 @mlflow.trace(name="hyde")
 def hyde(state):
