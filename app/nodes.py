@@ -70,7 +70,7 @@ def hyde(state):
 @track_node("向量檢索")
 @mlflow.trace(name="retrieve")
 def retrieve(state):
-    if "vector_question" not in state:
+    if not state["vector_question"]:
         state["vector_question"] = state["question"]
     vector_question = state["vector_question"]
     documents = get_retriever().invoke(vector_question)
