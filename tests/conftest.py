@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import yaml
 from langchain_core.documents import Document
+from langchain_core.embeddings import FakeEmbeddings
 
 from app.config import get_settings
 from app.prompts.manager import PromptManager
@@ -117,3 +118,8 @@ def mock_vectorstore():
     vs._collection.count.return_value = 42
     vs._collection.get.return_value = {"metadatas": [{"source": "test.md"}]}
     return vs
+
+
+@pytest.fixture
+def fake_embeddings():
+    return FakeEmbeddings(size=1536)

@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     enable_telemetry: bool = True
     ollama_model: str
     embeddings_model: str
+    splitter: Literal['recursive', 'semantic']
     chroma_path: str
     batch_size: int
     max_retry_count: int

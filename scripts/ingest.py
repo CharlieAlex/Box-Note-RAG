@@ -1,13 +1,22 @@
 import typer
+from langchain_ollama import OllamaEmbeddings
 from loguru import logger
 from tqdm import tqdm
 
 from app.config import get_settings
 from app.retriever.loaders import load_documents
-from app.retriever.splitters import get_recursive_splitter
+from app.retriever.splitters import splitter_mapping
 from app.retriever.vector_store import get_vector_store
 
 BATCH_SIZE = get_settings().batch_size
+SPLITTER = get_settings().splitter
+SPLITTER_ARGS = {
+    "chunk_size": 400,
+    "chunk_overlap": 50,
+    "embeddings": OllamaEmbeddings(model=get_settings().embeddings_model),
+    "breakpoint_threshold_type": "percentile"
+}
+
 app = typer.Typer()
 
 
@@ -17,7 +26,8 @@ def run_ingest(data_path: str = typer.Option(..., help="資料路徑")):
     docs = load_documents(data_path)
 
     # 2. 切片
-    splitter = get_recursive_splitter(chunk_size=400, chunk_overlap=50)
+    splitter_func = splitter_mapping.get(SPLITTER)
+    splitter = splitter_func(**SPLITTER_ARGS)
     chunks = splitter.split_documents(docs)
 
     # 3. 存入

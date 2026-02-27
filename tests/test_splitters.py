@@ -49,6 +49,48 @@ def test_recursive_splitter_splitting_behavior(text_multiplier, expected_min_chu
 
 # ── SemanticSplitter ─────────────────────────────────
 
-def test_semantic_splitter_not_implemented():
-    """get_semantic_splitter() 尚未實作，回傳 None"""
-    assert get_semantic_splitter() is None
+def test_semantic_splitter_splitting_behavior(fake_embeddings):
+    """
+    驗證語義切分器是否能正確根據內容切分，並保留 Metadata。
+    """
+    # 1. 準備測試資料：兩段語義完全不同的句子
+    # 語義切分器會偵測到從「貓」轉向「量子力學」的話題轉折
+    text_a = "The cat is sleeping on the soft rug. It purrs loudly while dreaming of fish."
+    text_b = "Quantum entanglement is a physical phenomenon that occurs when a group of particles are generated."
+    full_text = text_a + " " + text_b
+
+    source_metadata = {"source": "semantic_test.md", "importance": "high"}
+    doc = Document(page_content=full_text, metadata=source_metadata)
+
+    # 2. 初始化切分器
+    # 使用 percentile 模式，並傳入 fake_embeddings
+    splitter = get_semantic_splitter(embeddings=fake_embeddings, breakpoint_threshold_type="percentile")
+
+    # 3. 執行切分
+    chunks = splitter.split_documents([doc])
+
+    # 4. 驗證行為
+    # 注意：FakeEmbeddings 的向量是隨機或固定的，可能不會每次都精準切在話題轉折點
+    # 但至少應該產生 Document 物件
+    assert len(chunks) > 0, "語義切分器不應回傳空列表"
+
+    # 5. 驗證 Metadata 繼承 (與你原本的測試邏輯一致)
+    for i, chunk in enumerate(chunks):
+        assert source_metadata.items() <= chunk.metadata.items(), f"第 {i} 個片段 Metadata 遺失"
+        assert "start_index" in chunk.metadata, "語義切分器應包含 start_index"
+
+
+@pytest.mark.parametrize("threshold_type", ["percentile", "standard_deviation", "interquartile"])
+def test_semantic_splitter_different_thresholds(fake_embeddings, threshold_type):
+    """
+    驗證不同的切分閾值類型是否都能正常初始化並執行。
+    """
+    splitter = get_semantic_splitter(
+        embeddings=fake_embeddings,
+        breakpoint_threshold_type=threshold_type
+    )
+
+    doc = Document(page_content="Hello world. " * 10)
+    chunks = splitter.split_documents([doc])
+
+    assert len(chunks) >= 1
