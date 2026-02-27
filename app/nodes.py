@@ -2,15 +2,17 @@ import mlflow
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from loguru import logger
+from rich.prompt import Prompt
 
 from .factory import get_bm25_retriever, get_llm, get_retriever
 from .prompts import PROMPTS_MANAGER
 from .schema import YesNoResponse
+from .telemetry import console, track_node
 
 
+@track_node("釐清問題")
 @mlflow.trace(name="clarify_question")
 def clarify_question(state):
-    logger.info("--- 釐清問題含義 ---")
     question = state["question"]
     prompt_template = ChatPromptTemplate.from_template(
         PROMPTS_MANAGER.get("clarify_question", version="v1")
@@ -21,23 +23,22 @@ def clarify_question(state):
     return {"question": new_question}
 
 
+@track_node("詢問用戶", show_spinner=False)
 @mlflow.trace(name="ask_user")
 def ask_user(state) -> dict:
-    logger.info("--- 提供用戶選擇選項 ---")
     question = state["question"]
-    logger.info(f"\n{question}")
-
-    guided_question = "請提供你的想法(如輸入選項數字，或是更清楚的問題):"
-    user_choice = input(guided_question)
+    guided_question = f"[bold yellow]{question}[/bold yellow]\n\n請提供你的想法(如輸入選項數字，或是更清楚的問題)"
+    with console.screen():
+        user_choice = Prompt.ask(guided_question)
     question += f"\n\n{guided_question}\n\n{user_choice}"
 
     return {"question": question}
 
 
+@track_node("HyDE 生成")
 @mlflow.trace(name="hyde")
 def hyde(state):
     """HyDE: 根據問題生成假說文件，合併後用於檢索"""
-    logger.info("--- HyDE: 生成假說文件 ---")
     question = state["question"]
 
     prompt_template = ChatPromptTemplate.from_template(
@@ -52,9 +53,9 @@ def hyde(state):
     return {"question": merged_query}
 
 
+@track_node("向量檢索")
 @mlflow.trace(name="retrieve")
 def retrieve(state):
-    logger.info("--- 執行檢索 ---")
     if "vector_question" not in state:
         state["vector_question"] = state["question"]
     vector_question = state["vector_question"]
@@ -62,19 +63,19 @@ def retrieve(state):
     return {"documents": documents, "vector_question": vector_question}
 
 
+@track_node("詞彙檢索")
 @mlflow.trace(name="lexical_retrieve")
 def lexical_retrieve(state):
     """BM25 lexical retrieval"""
-    logger.info("--- 執行 BM25 詞彙檢索 ---")
     question = state["question"]
     documents = get_bm25_retriever(k=10).invoke(question)
     logger.debug(f"BM25 檢索結果:\n{documents}")
     return {"lexical_documents": documents}
 
 
+@track_node("文件評分")
 @mlflow.trace(name="grade_documents")
 def grade_documents(state):
-    logger.info("--- 檢查文件相關性 ---")
     question = state["vector_question"]
     documents = state["documents"]
 
@@ -100,9 +101,9 @@ def grade_documents(state):
     return {"documents": filtered_docs, "vector_question": question, "search_needed": search_needed}
 
 
+@track_node("問題重寫")
 @mlflow.trace(name="transform_query")
 def transform_query(state):
-    logger.info("--- 優化搜尋關鍵字 ---")
     question = state.get("vector_question", "")
     retry_count = max(state.get("retry_count") or 0, 0)
 
@@ -117,10 +118,10 @@ def transform_query(state):
     return {"vector_question": new_question, "retry_count": new_retry_count}
 
 
+@track_node("結果融合")
 @mlflow.trace(name="fusion")
 def fusion(state):
     """RRF (Reciprocal Rank Fusion) 融合 dense 和 lexical 檢索結果"""
-    logger.info("--- RRF 融合排名 ---")
     dense_docs = state.get("documents") or []
     lexical_docs = state.get("lexical_documents") or []
 
@@ -148,10 +149,10 @@ def fusion(state):
     return {"documents": fused_docs}
 
 
+@track_node("重排序")
 @mlflow.trace(name="reorder")
 def reorder(state):
     """將文件交替排列：第1名在位置1, 第2名在最後, 第3名在位置2, 第4名在倒數第2..."""
-    logger.info("--- 重新排序文件 ---")
     documents = state.get("documents") or []
 
     if len(documents) <= 1:
@@ -171,9 +172,9 @@ def reorder(state):
     return {"documents": reordered}
 
 
+@track_node("生成回答")
 @mlflow.trace(name="generate")
 def generate(state):
-    logger.info("--- 執行最終生成 ---")
     question = state["question"]
     documents = state["documents"]
 

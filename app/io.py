@@ -5,6 +5,10 @@ from typing import Any
 
 from langchain_core.documents import Document
 from loguru import logger
+from rich.panel import Panel
+from rich.table import Table
+
+from .telemetry import console
 
 DATA_DIR = Path("data")
 DOCS_DIR = Path("docs")
@@ -37,7 +41,6 @@ def save_conversation(
         "question": inputs["question"],
         "documents": [doc_to_dict(doc) for doc in final_output.get("documents", [])],
         "generation": final_output.get("generation", ""),
-        "retry_count": inputs["retry_count"]
     }
 
     # JSONL：每行一筆對話（易 append）
@@ -49,21 +52,35 @@ def save_conversation(
 
 
 def show_structured_output(output):
-    structured_output = ""
+    console.print("\n")
+    console.print(Panel(
+        f"[bold white]問: {output['question']}[/bold white]",
+        title="[bold cyan]🧠 用戶問題[/bold cyan]",
+        border_style="cyan"
+    ))
 
-    structured_output += "🧠 用戶問題\n\n"
-    structured_output += f"Q: {output['question']}\n"
+    table = Table(
+        title=f"📚 相關文件 ({len(output.get('documents', []))} 個)",
+        show_header=True,
+        header_style="bold magenta",
+        box=None
+    )
+    table.add_column("ID", style="dim", width=4)
+    table.add_column("內容摘要")
 
-    structured_output += f"\n📚 相關文件 ({len(output.get('documents', []))} 個)\n\n"
     for i, doc in enumerate(output.get("documents", []), 1):
         content = (doc.page_content if hasattr(doc, 'page_content')
-                  else str(doc))[:150] + "..."
-        structured_output += f"  {i:2d} | {content}\n"
+                  else str(doc))[:150].replace("\n", " ") + "..."
+        table.add_row(f"{i}", content)
 
-    structured_output += "\n✨ AI 回答\n\n"
-    structured_output += f"A: {output.get('generation', '暫無回答')}\n"
+    console.print(table)
 
-    logger.info(structured_output)
+    console.print(Panel(
+        f"[bold green]{output.get('generation', '暫無回答')}[/bold green]",
+        title="[bold yellow]✨ AI 回答[/bold yellow]",
+        border_style="yellow"
+    ))
+    console.print("\n")
 
 
 def save_graph(app, png_path: str = DATA_DIR / "graph.png", md_path: str = DOCS_DIR / "graph.md") -> None:

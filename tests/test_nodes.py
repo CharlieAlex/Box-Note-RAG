@@ -23,7 +23,7 @@ def test_ask_user_logic(monkeypatch):
 
     # 2. Mock 掉內建的 input 函式
     # 這裡我們模擬用戶輸入了 "1"
-    monkeypatch.setattr("builtins.input", lambda _: "1")
+    monkeypatch.setattr("builtins.input", lambda *args: "1")
 
     # 3. 執行節點
     result = nodes.ask_user(state)
