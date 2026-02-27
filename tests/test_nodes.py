@@ -16,6 +16,24 @@ def test_clarify_question(mock_llm):
     assert mock_llm.called
 
 
+@pytest.mark.parametrize("mock_answer, expected_clarity", [
+    ("yes", "yes"),
+    ("no", "no"),
+])
+def test_check_clarity(mock_llm, mock_answer, expected_clarity):
+    """測試問題清晰度檢查邏輯"""
+    response = YesNoResponse(answer=mock_answer)
+    structured_runnable = MagicMock()
+    structured_runnable.return_value = response
+    mock_llm.with_structured_output.return_value = structured_runnable
+
+    state = {"question": "test question"}
+    result = nodes.check_clarity(state)
+
+    assert result["clarity"] == expected_clarity
+    assert mock_llm.with_structured_output.called
+
+
 def test_ask_user_logic(monkeypatch):
     # 1. 準備模擬的 State
     initial_question = "你想學習 pytest 嗎？\n1. 是\n2. 否"

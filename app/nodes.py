@@ -10,6 +10,20 @@ from .schema import YesNoResponse
 from .telemetry import console, track_node
 
 
+@track_node("檢查問題清晰度")
+@mlflow.trace(name="check_clarity")
+def check_clarity(state):
+    """檢查用戶問題是否足夠清楚，可以直接開始檢索"""
+    question = state["question"]
+    prompt_template = ChatPromptTemplate.from_template(
+        PROMPTS_MANAGER.get("check_clarity", version="v1")
+    )
+    chain = prompt_template | get_llm().with_structured_output(YesNoResponse)
+    response = chain.invoke({"question": question})
+
+    return {"clarity": response.answer}
+
+
 @track_node("釐清問題")
 @mlflow.trace(name="clarify_question")
 def clarify_question(state):

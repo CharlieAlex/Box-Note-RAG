@@ -13,5 +13,6 @@ class GraphState(TypedDict):
     lexical_documents: Annotated[list, _last]  # 詞法檢索到的筆記片段
     generation: str        # AI 生成的最終答案
     search_needed: Annotated[str, _last]     # 是否需要額外搜尋 ("Yes" / "No")
+    clarity: Annotated[str, _last]           # 是否足夠清楚直接檢索 ("yes" / "no")
     retry_count: Annotated[int, _last]       # 避免無限迴圈的計數器
     max_retry_count: int   # 最大 retry 次數

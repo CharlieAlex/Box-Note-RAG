@@ -2,6 +2,7 @@ from langgraph.graph import END, StateGraph
 
 from .nodes import (
     ask_user,
+    check_clarity,
     clarify_question,
     fusion,
     generate,
@@ -13,6 +14,13 @@ from .nodes import (
     transform_query,
 )
 from .state import GraphState
+
+
+def decide_to_clarify(state):
+    clarity = state.get("clarity", "no")
+    if clarity == "yes":
+        return "search"
+    return "clarify"
 
 
 def decide_to_generate(state):
@@ -36,6 +44,7 @@ def create_app():
     workflow = StateGraph(GraphState)
 
     # 1. 加入節點
+    workflow.add_node("check_clarity", check_clarity)
     workflow.add_node("clarify_question", clarify_question)
     workflow.add_node("ask_user", ask_user)
     workflow.add_node("hyde", hyde)
@@ -48,7 +57,7 @@ def create_app():
     workflow.add_node("generate", generate)
 
     # 2. 設定進入點
-    workflow.set_entry_point("clarify_question")
+    workflow.set_entry_point("check_clarity")
 
     # 3. 建立連線
     workflow.add_edge("clarify_question", "ask_user")
@@ -58,6 +67,15 @@ def create_app():
     workflow.add_edge("retrieve", "grade_documents")
 
     # 4. 建立條件邏輯 (Conditional Edges)
+    workflow.add_conditional_edges(
+        "check_clarity",
+        decide_to_clarify,
+        {
+            "clarify": "clarify_question",
+            "search": "hyde",
+        },
+    )
+
     workflow.add_conditional_edges(
         "grade_documents",
         decide_to_generate,
