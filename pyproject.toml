@@ -3,7 +3,7 @@ name = "Box-Note-RAG"
 version = "0.1.0"
 description = "Box Note RAG"
 authors = [{ name = "Heisenberg", email = "charliealex0101@gmail.com" }]
-requires-python = ">=3.9,<3.10"
+requires-python = ">=3.12"
 
 dependencies = [
     # --- 核心框架 ---
@@ -32,8 +32,9 @@ dependencies = [
     "tavily-python",      # AI 搜尋工具 (Fallback 用)
 
     # --- 生產化與觀測 ---
-    "mlflow",
+    "mlflow>=3.9.0",
     "loguru",
+    "rich",
 ]
 
 [project.optional-dependencies]
