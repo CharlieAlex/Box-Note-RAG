@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import mlflow
 from langchain_core.documents import Document
 from rich.panel import Panel
 from rich.table import Table
@@ -99,6 +100,7 @@ def save_graph(app, png_path: str = DATA_DIR / "graph.png", md_path: str = DOCS_
     md_content = f"{title}\n\n{header}\n\n{mermaid_block}"
 
     png_path.open("wb").write(png_bytes)
+    mlflow.log_artifact(local_path=str(png_path), artifact_path="plots/graphs")
     RichUI.display_success(f"💾 已存到 {png_path}")
 
     md_path.open("w", encoding="utf-8").write(md_content)
