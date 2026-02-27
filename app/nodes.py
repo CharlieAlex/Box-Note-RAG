@@ -160,17 +160,17 @@ def fusion(state):
     sorted_keys = sorted(scores, key=lambda x: scores[x], reverse=True)[:5]
     fused_docs = [doc_map[key] for key in sorted_keys]
 
-    return {"documents": fused_docs}
+    return {"fused_documents": fused_docs}
 
 
 @track_node("重排序")
 @mlflow.trace(name="reorder")
 def reorder(state):
     """將文件交替排列：第1名在位置1, 第2名在最後, 第3名在位置2, 第4名在倒數第2..."""
-    documents = state.get("documents") or []
+    documents = state.get("fused_documents") or []
 
     if len(documents) <= 1:
-        return {"documents": documents}
+        return {"reordered_documents": documents}
 
     reordered = [None] * len(documents)
     left, right = 0, len(documents) - 1
@@ -183,14 +183,14 @@ def reorder(state):
             reordered[right] = doc
             right -= 1
 
-    return {"documents": reordered}
+    return {"reordered_documents": reordered}
 
 
 @track_node("生成回答")
 @mlflow.trace(name="generate")
 def generate(state):
     question = state["question"]
-    documents = state["documents"]
+    documents = state["reordered_documents"]
 
     # 1. 將所有相關筆記片段合併為一個字串
     context = "\n\n".join(doc.page_content for doc in documents)

@@ -93,7 +93,7 @@ def test_fusion_rrf_ranking_logic():
 
     result = nodes.fusion({"documents": dense, "lexical_documents": lexical})
 
-    assert result["documents"][0].page_content == "shared_doc"
+    assert result["fused_documents"][0].page_content == "shared_doc"
 
 
 @pytest.mark.parametrize("dense_count, lexical_count, expected_count", [
@@ -114,7 +114,7 @@ def test_fusion_boundary_conditions(dense_count, lexical_count, expected_count):
         state["lexical_documents"] = lexical_docs
 
     result = nodes.fusion(state)
-    assert len(result["documents"]) == expected_count
+    assert len(result["fused_documents"]) == expected_count
 
 
 @pytest.mark.parametrize("input_count, expected_order", [
@@ -129,9 +129,9 @@ def test_reorder_behavior(input_count, expected_order):
     合併所有重排測試：驗證「迷失在中間」的交替排列演算法。
     """
     docs = [Document(page_content=f"d{i+1}") for i in range(input_count)]
-    result = nodes.reorder({"documents": docs})
+    result = nodes.reorder({"fused_documents": docs})
 
-    contents = [d.page_content for d in result["documents"]]
+    contents = [d.page_content for d in result["reordered_documents"]]
     assert contents == expected_order
 
 
@@ -184,7 +184,7 @@ def test_generate_contract(mock_llm):
 
     state = {
         "question": "Q",
-        "documents": [Document(page_content="Context")]
+        "reordered_documents": [Document(page_content="Context")]
     }
 
     result = nodes.generate(state)

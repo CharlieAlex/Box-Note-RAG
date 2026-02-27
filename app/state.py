@@ -11,6 +11,8 @@ class GraphState(TypedDict):
     vector_question: Annotated[str, _last]      # 向量檢索時轉換的問題
     documents: Annotated[list, _last]        # 向量檢索到的筆記片段
     lexical_documents: Annotated[list, _last]  # 詞法檢索到的筆記片段
+    fused_documents: Annotated[list, _last]  # 融合後的筆記片段
+    reordered_documents: Annotated[list, _last]  # 重排後的筆記片段
     generation: str        # AI 生成的最終答案
     search_needed: Annotated[str, _last]     # 是否需要額外搜尋 ("Yes" / "No")
     clarity: Annotated[str, _last]           # 是否足夠清楚直接檢索 ("yes" / "no")
