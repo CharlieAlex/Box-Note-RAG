@@ -3,9 +3,10 @@ import mlflow
 from app.config import get_settings
 from app.graph import create_app
 from app.io import save_conversation, save_graph, show_structured_output
-from app.telemetry import init_monitoring
+from app.telemetry import RichUI, console, init_loguru, init_monitoring
 
 init_monitoring()
+init_loguru("INFO")
 app = create_app()
 
 
