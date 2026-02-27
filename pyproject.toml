@@ -11,6 +11,7 @@ dependencies = [
     "langchain-core",
     "langchain-community",
     "langchain-ollama",
+    "langchain-experimental",
     "langgraph",
     "urllib3<2.0",         # 避免 SSL 錯誤
 
