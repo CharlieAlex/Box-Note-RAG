@@ -6,18 +6,17 @@ from app.graph import create_app
 from app.io import save_conversation, save_graph, show_structured_output
 from app.telemetry import RichUI, console, init_loguru, init_mlflow
 
-init_loguru("INFO")
-init_mlflow()
 app = create_app()
 
 
 def run_agent():
     RichUI.display_header("Box Note RAG 智慧助手")
 
+    # 用戶提問
+    user_q = Prompt.ask("[bold yellow]請輸入關於筆記的問題[/bold yellow]")
+
     with mlflow.start_run() as run:
         # 輸入輸出
-        user_q = Prompt.ask("[bold yellow]請輸入關於筆記的問題[/bold yellow]")
-
         inputs = {"question": user_q, "max_retry_count": get_settings().max_retry_count}
         config = {"configurable": {"thread_id": "user_1"}}
         final_output = app.invoke(inputs, config)
@@ -42,8 +41,10 @@ def run_agent():
             save_graph(app)
             save_conversation(config["configurable"]["thread_id"], inputs, final_output)
 
-        RichUI.display_success("對話已完成並儲存。")
+    RichUI.display_success("對話已完成並儲存。")
 
 
 if __name__ == "__main__":
+    init_loguru("INFO")
+    init_mlflow()
     run_agent()
