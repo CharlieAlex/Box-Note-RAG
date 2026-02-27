@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import typer
 from langchain_ollama import OllamaEmbeddings
 from loguru import logger
@@ -24,6 +26,9 @@ app = typer.Typer()
 def run_ingest(data_path: str = typer.Option(..., help="資料路徑")):
     # 1. 載入
     docs = load_documents(data_path)
+    for doc in docs:
+        # 把 source 路徑只留下文件名稱
+        doc.metadata["source"] = Path(doc.metadata.get("source", "Unknown")).stem
 
     # 2. 切片
     splitter_func = splitter_mapping.get(SPLITTER)
